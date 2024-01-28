@@ -12,7 +12,7 @@ p {
 
 body {
     font: 14px Cascadia code, JetBrains Mono, Roboto Mono, Droid Sans Mono, Menlo, Consolas, Ubuntu Mono, Courier New, Courier, Century Gothic, Futura, sans-serif;
-    margin: 30px;
+    margin: 20px;
     margin-right: 40px
 }
 
@@ -39,5 +39,4 @@ td {
     border: 1px solid #999;
     height: 16px;
     width: 16px;
-    /* transition: 300ms linear; */
 }
