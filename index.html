@@ -55,6 +55,114 @@
                 );
             }
 
+            function Sliders2(props) {
+                const max1 = parseInt(props.max1, 10);
+                const min1 = parseInt(props.min1, 10);
+                const maxLength1 = max1 ? Math.ceil(Math.log10(max1)) : 1;
+                const disabled1 = props.disabled1 || min1 >= max1;
+                const max2 = parseInt(props.max2, 10);
+                const min2 = parseInt(props.min2, 10);
+                const maxLength2 = max2 ? Math.ceil(Math.log10(max2)) : 1;
+                const disabled2 = props.disabled2 || min2 >= max2;
+                return (
+                    <span className="sliders2">
+                        X:&nbsp;
+                        <input type="range" min={min1} max={max1} value={props.value1}
+                            onChange={props.onChange1}
+                            disabled={disabled1}
+                            />
+                        <input type="text" value={props.value1}
+                            onChange={props.onChange1}
+                            maxLength={maxLength1}
+                            disabled={disabled1}
+                            size={Math.max(maxLength1, 2)}
+                            />
+                        <br/>
+                        Y:&nbsp;
+                        <input type="range" min={min2} max={max2} value={props.value2}
+                            onChange={props.onChange2}
+                            disabled={disabled2}
+                            />
+                        <input type="text" value={props.value2}
+                            onChange={props.onChange2}
+                            maxLength={maxLength2}
+                            disabled={disabled2}
+                            size={Math.max(maxLength2, 2)}
+                            />
+                    </span>
+                );
+            }
+
+            function Sliders4(props) {
+                const max1 = parseInt(props.max1, 10);
+                const min1 = parseInt(props.min1, 10);
+                const maxLength1 = max1 ? Math.ceil(Math.log10(max1)) : 1;
+                const disabled1 = props.disabled1 || min1 >= max1;
+                const max2 = parseInt(props.max2, 10);
+                const min2 = parseInt(props.min2, 10);
+                const maxLength2 = max2 ? Math.ceil(Math.log10(max2)) : 1;
+                const disabled2 = props.disabled2 || min2 >= max2;
+                const max3 = parseInt(props.max3, 10);
+                const min3 = parseInt(props.min3, 10);
+                const maxLength3 = max3 ? Math.ceil(Math.log10(max3)) : 1;
+                const disabled3 = props.disabled3 || min3 >= max3;
+                const max4 = parseInt(props.max4, 10);
+                const min4 = parseInt(props.min4, 10);
+                const maxLength4 = max4 ? Math.ceil(Math.log10(max4)) : 1;
+                const disabled4 = props.disabled4 || min4 >= max4;
+                return (
+                    <span className="sliders4">
+                        L:&nbsp;
+                        <input type="range" min={min1} max={max1} value={props.value1}
+                            onChange={props.onChange1}
+                            disabled={disabled1}
+                            />
+                        <input type="text" value={props.value1}
+                            onChange={props.onChange1}
+                            maxLength={maxLength1}
+                            disabled={disabled1}
+                            size={Math.max(maxLength1, 2)}
+                            />
+                        <br/>
+                        R:&nbsp;
+                        <input type="range" min={min2} max={max2} value={props.value2}
+                            onChange={props.onChange2}
+                            disabled={disabled2}
+                            />
+                        <input type="text" value={props.value2}
+                            onChange={props.onChange2}
+                            maxLength={maxLength2}
+                            disabled={disabled2}
+                            size={Math.max(maxLength2, 2)}
+                            />
+                        <br/>
+                        U:&nbsp;
+                        <input type="range" min={min3} max={max3} value={props.value3}
+                            onChange={props.onChange3}
+                            disabled={disabled3}
+                            />
+                        <input type="text" value={props.value3}
+                            onChange={props.onChange3}
+                            maxLength={maxLength3}
+                            disabled={disabled3}
+                            size={Math.max(maxLength3, 2)}
+                            />
+                        <br/>
+                        D:&nbsp;
+                        <input type="range" min={min4} max={max4} value={props.value4}
+                            onChange={props.onChange4}
+                            disabled={disabled4}
+                            />
+                        <input type="text" value={props.value4}
+                            onChange={props.onChange4}
+                            maxLength={maxLength4}
+                            disabled={disabled4}
+                            size={Math.max(maxLength4, 2)}
+                            />
+                    </span>
+                );
+            }
+
             /**
              * Create a 1-dimensional array of size 'length', where the 'i'th entry
              * is initialized to 'f(i)', or 'undefined' if 'f' is not passed.
@@ -79,8 +187,8 @@
              */
             function computeOutputSize(input_size, weight_size, padding, dilation, stride) {
                 let output_size = {
-                    X: Math.floor((input_size.X + 2 * padding - dilation * (weight_size.X - 1) - 1) / stride + 1),
-                    Y: Math.floor((input_size.Y + 2 * padding - dilation * (weight_size.Y - 1) - 1) / stride + 1)
+                    X: Math.floor((input_size.X + padding.L + padding.R - dilation.X * (weight_size.X - 1) - 1) / stride.X + 1),
+                    Y: Math.floor((input_size.Y + padding.U + padding.D - dilation.Y * (weight_size.Y - 1) - 1) / stride.Y + 1)
                 }
                 return output_size;
             }
@@ -150,9 +258,20 @@
                             X: 3,
                             Y: 3
                         },
-                        padding: 0,
-                        dilation: 1,
-                        stride: 1,
+                        padding: {
+                            L: 0,
+                            R: 0,
+                            U: 0,
+                            D: 0
+                        },
+                        dilation: {
+                            X: 1,
+                            Y: 1
+                        },
+                        stride: {
+                            X: 1,
+                            Y: 1
+                        },
                     };
                 }
 
@@ -177,8 +296,8 @@
                     const dilation = this.state.dilation;
                     const stride = this.state.stride;
                     const padded_input_size = {
-                        X: input_size.X + padding * 2,
-                        Y: input_size.Y + padding * 2
+                        X: input_size.X + padding.L + padding.R,
+                        Y: input_size.Y + padding.U + padding.D
                     };
 
                     // TODO: transposed convolution
@@ -202,8 +321,8 @@
                                 for (let w_kern = 0; w_kern < weight_size.X; w_kern++) {
                                     // NB: We purposely don't apply padding here, this is
                                     // handled at render time.
-                                    const h_im = h_out * stride + h_kern * dilation;
-                                    const w_im = w_out * stride + w_kern * dilation;
+                                    const h_im = h_out * stride.Y + h_kern * dilation.Y;
+                                    const w_im = w_out * stride.X + w_kern * dilation.X;
                                     output[h_out][w_out][h_kern][w_kern] = h_im * padded_input_size.X + w_im;
                                 }
                             }
@@ -244,8 +363,8 @@
 
                     // An arbitrary constant I found aesthetically pleasing.
                     const max_input_size = {
-                        X: 16,
-                        Y: 16
+                        X: 64,
+                        Y: 64
                     };
 
                     return (
@@ -266,61 +385,74 @@
                             </p>
                             <form className="form">
                                 <fieldset>
-                                    <legend>Input size X:</legend>
-                                    <Slider min={minWhile(max_input_size.X, 1, (x) => paramsOK({X: x, Y: input_size.Y}, weight_size, padding, dilation, stride))}
-                                            max={max_input_size.X}
-                                            value={input_size.X}
-                                            onChange={onChangeInner("input_size", "X")}
-                                            />
+                                    <legend>Input size:</legend>
+                                    <Sliders2 min1={minWhile(max_input_size.X, 1, (x) => paramsOK({X: x, Y: input_size.Y}, weight_size, padding, dilation, stride))}
+                                              max1={max_input_size.X}
+                                              value1={input_size.X}
+                                              onChange1={onChangeInner("input_size", "X")}
+                                              min2={minWhile(max_input_size.Y, 1, (x) => paramsOK({X: input_size.X, Y: x}, weight_size, padding, dilation, stride))}
+                                              max2={max_input_size.Y}
+                                              value2={input_size.Y}
+                                              onChange2={onChangeInner("input_size", "Y")}
+                                              />
                                 </fieldset>
                                 <fieldset>
-                                    <legend>Input size Y:</legend>
-                                    <Slider min={minWhile(max_input_size.Y, 1, (x) => paramsOK({X: input_size.X, Y: x}, weight_size, padding, dilation, stride))}
-                                            max={max_input_size.Y}
-                                            value={input_size.Y}
-                                            onChange={onChangeInner("input_size", "Y")}
-                                            />
-                                </fieldset>
-                                <fieldset>
-                                    <legend>Kernel size X:</legend>
-                                    <Slider min="1"
-                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, {X: x, Y: weight_size.Y}, padding, dilation, stride))}
-                                            value={weight_size.X}
-                                            onChange={onChangeInner("weight_size", "X")}
-                                            />
-                                </fieldset>
-                                <fieldset>
-                                    <legend>Kernel size Y:</legend>
-                                    <Slider min="1"
-                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, {X: weight_size.X, Y: x}, padding, dilation, stride))}
-                                            value={weight_size.Y}
-                                            onChange={onChangeInner("weight_size", "Y")}
-                                            />
+                                    <legend>Kernel size:</legend>
+                                    <Sliders2 min1="1"
+                                              max1={maxWhile(1, 100, (x) => paramsOK(input_size, {X: x, Y: weight_size.Y}, padding, dilation, stride))}
+                                              value1={weight_size.X}
+                                              onChange1={onChangeInner("weight_size", "X")}
+                                              min2="1"
+                                              max2={maxWhile(1, 100, (x) => paramsOK(input_size, {X: weight_size.X, Y: x}, padding, dilation, stride))}
+                                              value2={weight_size.Y}
+                                              onChange2={onChangeInner("weight_size", "Y")}
+                                              />
                                 </fieldset>
                                 <fieldset>
                                     <legend>Padding:</legend>
-                                    <Slider min={minWhile(dilation*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, x, dilation, stride))}
-                                            max={Math.max(dilation*(weight_size.X-1), dilation*(weight_size.Y-1))}
-                                            value={padding}
-                                            onChange={onChange("padding")}
-                                            />
+                                    <Sliders4 min1={minWhile(dilation.X*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: x, R: padding.R, U: padding.U, D: padding.D}, dilation, stride))}
+                                              max1={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.Y-1))}
+                                              value1={padding.L}
+                                              onChange1={onChangeInner("padding", "L")}
+                                              min2={minWhile(dilation.X*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: x, U: padding.U, D: padding.D}, dilation, stride))}
+                                              max2={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.Y-1))}
+                                              value2={padding.R}
+                                              onChange2={onChangeInner("padding", "R")}
+                                              min3={minWhile(dilation.Y*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: x, D: padding.D}, dilation, stride))}
+                                              max3={Math.max(dilation.Y*(weight_size.X-1), dilation.Y*(weight_size.Y-1))}
+                                              value3={padding.U}
+                                              onChange3={onChangeInner("padding", "U")}
+                                              min4={minWhile(dilation.Y*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: padding.U, D: x}, dilation, stride))}
+                                              max4={Math.max(dilation.Y*(weight_size.X-1), dilation.Y*(weight_size.Y-1))}
+                                              value4={padding.D}
+                                              onChange4={onChangeInner("padding", "D")}
+                                              />
                                 </fieldset>
                                 <fieldset>
                                     <legend>Dilation:</legend>
-                                    <Slider min="1"
-                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, weight_size, padding, x, stride))}
-                                            value={dilation}
-                                            onChange={onChange("dilation")}
-                                            disabled={weight_size.X === 1 && weight_size.Y === 1}
-                                            />
+                                    <Sliders2 min1="1"
+                                              max1={maxWhile(1, 100, (x) => paramsOK(input_size, weight_size, padding, {X: x, Y: dilation.Y}, stride))}
+                                              value1={dilation.X}
+                                              onChange1={onChangeInner("dilation", "X")}
+                                              disabled1={weight_size.X === 1}
+                                              min2="1"
+                                              max2={maxWhile(1, 100, (x) => paramsOK(input_size, weight_size, padding, {X: dilation.X, Y: x}, stride))}
+                                              value2={dilation.Y}
+                                              onChange2={onChangeInner("dilation", "Y")}
+                                              disabled2={weight_size.Y === 1}
+                                              />
                                 </fieldset>
                                 <fieldset>
                                     <legend>Stride:</legend>
-                                    <Slider min="1"
-                                            max={Math.max(input_size.X-dilation*(weight_size.X-1), input_size.Y-dilation*(weight_size.Y-1), 1)}
-                                            value={stride}
-                                            onChange={onChange("stride")}
-                                            />
+                                    <Sliders2 min1="1"
+                                              max1={Math.max(input_size.X-dilation.X*(weight_size.X-1), 1)}
+                                              value1={stride.X}
+                                              onChange1={onChangeInner("stride", "X")}
+                                              min2="1"
+                                              max2={Math.max(input_size.Y-dilation.Y*(weight_size.Y-1), 1)}
+                                              value2={stride.Y}
+                                              onChange2={onChangeInner("stride", "Y")}
+                                              />
                                 </fieldset>
                             </form>
                             <Viewport {...params} />
@@ -397,7 +529,7 @@
                             } else {
                                 r = d3.color(r);
                             }
-                            if (i < padding || i >= input_size.Y + padding || j < padding || j >= input_size.X + padding) {
+                            if (i < padding.U || i >= input_size.Y + padding.U || j < padding.L || j >= input_size.X + padding.L) {
                                 r = r.darker(2.5);
                             }
                             return r;
@@ -423,8 +555,8 @@
                     // top-left corner of the stencil is attached to the cursor.
                     if (hoverOver === "input") {
                         hoverOver = "output";
-                        hoverH = Math.min(Math.floor(hoverH / stride), output_size.Y - 1);
-                        hoverW = Math.min(Math.floor(hoverW / stride), output_size.X - 1);
+                        hoverH = Math.min(Math.floor(hoverH / stride.Y), output_size.Y - 1);
+                        hoverW = Math.min(Math.floor(hoverW / stride.X), output_size.X - 1);
                     }
 
                     // Generate the color interpolator for generating the kernels.
@@ -584,7 +716,7 @@
                             if (i === animatedH && j === animatedW) {
                                 return color.darker(1);
                             }
-                                return color;
+                            return color;
                         };
                     }
 
@@ -592,7 +724,7 @@
                         <div className="viewport">
                             <div className="grid-container">
                             Input ({input_size.X} × {input_size.Y}):
-                            <Grid size={{X: input_size.X + 2 * padding, Y: input_size.Y + 2 * padding}}
+                            <Grid size={{X: input_size.X + padding. L + padding.R, Y: input_size.Y + padding.U + padding.D}}
                                     colorizer={inputColorizer}
                                     onMouseEnter={(e, i, j) => {
                                         this.setState({hoverOver: "input", hoverH: i, hoverW: j});

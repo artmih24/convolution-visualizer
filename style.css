@@ -11,7 +11,7 @@ p {
 }
 
 body {
-    font: 14px Century Gothic,Futura,sans-serif;
+    font: 14px Cascadia code, JetBrains Mono, Roboto Mono, Droid Sans Mono, Menlo, Consolas, Ubuntu Mono, Courier New, Courier, Century Gothic, Futura, sans-serif;
     margin: 20px;
     margin-right: 40px
 }
@@ -26,7 +26,8 @@ body {
 }
 
 .grid-container {
-    margin-bottom: 1em
+    margin-bottom: 1em;
+    margin-left: 30px
 }
 
 table {
@@ -36,6 +37,6 @@ table {
 td {
     background: #fff;
     border: 1px solid #999;
-    height: 20px;
-    width: 20px
+    height: 16px;
+    width: 16px
 }
