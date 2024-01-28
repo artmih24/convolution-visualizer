@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
         <meta name="theme-color" content="#000000">
-        <link rel="manifest" href="/convolution-visualizer/manifest.json">
         <title>Convolution Visualizer</title>
         <link href="style.css" rel="stylesheet">
         <script src="https://unpkg.com/@babel/standalone@7.23.9/babel.min.js"></script>
@@ -42,16 +41,16 @@
                 const disabled = props.disabled || min >= max;
                 return (
                     <span className="slider">
-                    <input type="range" min={min} max={max} value={props.value}
-                        onChange={props.onChange}
-                        disabled={disabled}
-                        />
-                    <input type="text" value={props.value}
-                        onChange={props.onChange}
-                        maxLength={maxLength}
-                        disabled={disabled}
-                        size={Math.max(maxLength, 2)}
-                        />
+                        <input type="range" min={min} max={max} value={props.value}
+                            onChange={props.onChange}
+                            disabled={disabled}
+                            />
+                        <input type="text" value={props.value}
+                            onChange={props.onChange}
+                            maxLength={maxLength}
+                            disabled={disabled}
+                            size={Math.max(maxLength, 2)}
+                            />
                     </span>
                 );
             }
@@ -79,14 +78,19 @@
              * http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html
              */
             function computeOutputSize(input_size, weight_size, padding, dilation, stride) {
-                return Math.floor((input_size + 2 * padding - dilation * (weight_size - 1) - 1) / stride + 1);
+                let output_size = {
+                    X: Math.floor((input_size.X + 2 * padding - dilation * (weight_size.X - 1) - 1) / stride + 1),
+                    Y: Math.floor((input_size.Y + 2 * padding - dilation * (weight_size.Y - 1) - 1) / stride + 1)
+                }
+                return output_size;
             }
 
             /**
              * Test if a set of parameters is valid.
              */
             function paramsOK(input_size, weight_size, padding, dilation, stride) {
-                return computeOutputSize(input_size, weight_size, padding, dilation, stride) > 0;
+                let ret = computeOutputSize(input_size, weight_size, padding, dilation, stride);
+                return (ret.X > 0 && ret.Y > 0)
             }
 
             // We use the next two functions (maxWhile and minWhile) to
@@ -100,7 +104,8 @@
              */
             function maxWhile(start, end, pred) {
                 for (let i = start; i <= end; i++) {
-                    if (pred(i)) continue;
+                    if (pred(i)) 
+                        continue;
                     return i - 1;
                 }
                 return end;
@@ -113,7 +118,8 @@
              */
             function minWhile(start, end, pred) {
                 for (let i = start; i >= end; i--) {
-                    if (pred(i)) continue;
+                    if (pred(i)) 
+                        continue;
                     return i + 1;
                 }
                 return end;
@@ -136,11 +142,17 @@
                 constructor(props) {
                     super(props);
                     this.state = {
-                    input_size: 5,
-                    weight_size: 3,
-                    padding: 0,
-                    dilation: 1,
-                    stride: 1,
+                        input_size: {
+                            X: 5,
+                            Y: 5
+                        },
+                        weight_size: {
+                            X: 3,
+                            Y: 3
+                        },
+                        padding: 0,
+                        dilation: 1,
+                        stride: 1,
                     };
                 }
 
@@ -150,7 +162,7 @@
                 componentDidMount() {
                     const state = localStorage.getItem("state");
                     if (state) {
-                    this.setState(JSON.parse(state));
+                        this.setState(JSON.parse(state));
                     }
                 }
 
@@ -164,7 +176,10 @@
                     const padding = this.state.padding;
                     const dilation = this.state.dilation;
                     const stride = this.state.stride;
-                    const padded_input_size = input_size + padding * 2;
+                    const padded_input_size = {
+                        X: input_size.X + padding * 2,
+                        Y: input_size.Y + padding * 2
+                    };
 
                     // TODO: transposed convolution
 
@@ -179,17 +194,17 @@
                     //      (undefined if this entry not used)
                     //
                     // Recall: the flat input index for (i, j) in a square matrix is 'i * size + j'
-                    const output = array2d(output_size, output_size, (i, j) => array2d(weight_size, weight_size));
+                    const output = array2d(output_size.Y, output_size.X, (i, j) => array2d(weight_size.Y, weight_size.X));
 
-                    for (let h_out = 0; h_out < output_size; h_out++) {
-                        for (let w_out = 0; w_out < output_size; w_out++) {
-                            for (let h_kern = 0; h_kern < weight_size; h_kern++) {
-                                for (let w_kern = 0; w_kern < weight_size; w_kern++) {
+                    for (let h_out = 0; h_out < output_size.Y; h_out++) {
+                        for (let w_out = 0; w_out < output_size.X; w_out++) {
+                            for (let h_kern = 0; h_kern < weight_size.Y; h_kern++) {
+                                for (let w_kern = 0; w_kern < weight_size.X; w_kern++) {
                                     // NB: We purposely don't apply padding here, this is
                                     // handled at render time.
                                     const h_im = h_out * stride + h_kern * dilation;
                                     const w_im = w_out * stride + w_kern * dilation;
-                                    output[h_out][w_out][h_kern][w_kern] = h_im * padded_input_size + w_im;
+                                    output[h_out][w_out][h_kern][w_kern] = h_im * padded_input_size.X + w_im;
                                 }
                             }
                         }
@@ -209,73 +224,104 @@
                             // Text inputs can sometimes temporarily be in invalid states.
                             // If it's not a valid number, refuse to set it.
                             if (typeof r !== "undefined") {
-                            this.setState({[state_key]: r});
+                                this.setState({[state_key]: r});
+                            }
+                        };
+                    };
+
+                    const onChangeInner = (state_key, state_inner_key) => {
+                        return (e) => {
+                            const r = parseInt(e.target.value, 10);
+                            // Text inputs can sometimes temporarily be in invalid states.
+                            // If it's not a valid number, refuse to set it.
+                            if (typeof r !== "undefined") {
+                                let tmpstate = JSON.parse(JSON.stringify(this.state))
+                                tmpstate[state_key][state_inner_key] = r
+                                this.setState(tmpstate)
                             }
                         };
                     };
 
                     // An arbitrary constant I found aesthetically pleasing.
-                    const max_input_size = 16;
+                    const max_input_size = {
+                        X: 16,
+                        Y: 16
+                    };
 
                     return (
                         <div>
                             <h1>Convolution Visualizer</h1>
                             <div className="author">Edward Z. Yang</div>
                             <p>
-                            This interactive visualization demonstrates how various convolution parameters
-                            affect shapes and data dependencies between the input, weight and
-                            output matrices.  Hovering over an input/output will highlight the
-                            corresponding output/input, while hovering over an weight
-                            will highlight which inputs were multiplied into that weight to
-                            compute an output.  (Strictly speaking, the operation visualized
-                            here is a <em>correlation</em>, not a convolution, as a true
-                            convolution flips its weights before performing a correlation.
-                            However, most deep learning frameworks still call these convolutions,
-                            and in the end it's all the same to gradient descent.)
+                                This interactive visualization demonstrates how various convolution parameters
+                                affect shapes and data dependencies between the input, weight and
+                                output matrices.  Hovering over an input/output will highlight the
+                                corresponding output/input, while hovering over an weight
+                                will highlight which inputs were multiplied into that weight to
+                                compute an output.  (Strictly speaking, the operation visualized
+                                here is a <em>correlation</em>, not a convolution, as a true
+                                convolution flips its weights before performing a correlation.
+                                However, most deep learning frameworks still call these convolutions,
+                                and in the end it's all the same to gradient descent.)
                             </p>
                             <form className="form">
-                            <fieldset>
-                                <legend>Input size:</legend>
-                                <Slider min={minWhile(max_input_size, 1, (x) => paramsOK(x, weight_size, padding, dilation, stride))}
-                                        max={max_input_size}
-                                        value={input_size}
-                                        onChange={onChange("input_size")}
-                                        />
-                            </fieldset>
-                            <fieldset>
-                                <legend>Kernel size:</legend>
-                                <Slider min="1"
-                                        max={maxWhile(1, 100, (x) => paramsOK(input_size, x, padding, dilation, stride))}
-                                        value={weight_size}
-                                        onChange={onChange("weight_size")}
-                                        />
-                            </fieldset>
-                            <fieldset>
-                                <legend>Padding:</legend>
-                                <Slider min={minWhile(dilation*(weight_size-1), 0,
-                                                    (x) => paramsOK(input_size, weight_size, x, dilation, stride))}
-                                        max={dilation*(weight_size-1)}
-                                        value={padding}
-                                        onChange={onChange("padding")}
-                                        />
-                            </fieldset>
-                            <fieldset>
-                                <legend>Dilation:</legend>
-                                <Slider min="1"
-                                        max={maxWhile(1, 100, (x) => paramsOK(input_size, weight_size, padding, x, stride))}
-                                        value={dilation}
-                                        onChange={onChange("dilation")}
-                                        disabled={weight_size === 1}
-                                        />
-                            </fieldset>
-                            <fieldset>
-                                <legend>Stride:</legend>
-                                <Slider min="1"
-                                        max={Math.max(input_size-dilation*(weight_size-1), 1)}
-                                        value={stride}
-                                        onChange={onChange("stride")}
-                                        />
-                            </fieldset>
+                                <fieldset>
+                                    <legend>Input size X:</legend>
+                                    <Slider min={minWhile(max_input_size.X, 1, (x) => paramsOK({X: x, Y: input_size.Y}, weight_size, padding, dilation, stride))}
+                                            max={max_input_size.X}
+                                            value={input_size.X}
+                                            onChange={onChangeInner("input_size", "X")}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Input size Y:</legend>
+                                    <Slider min={minWhile(max_input_size.Y, 1, (x) => paramsOK({X: input_size.X, Y: x}, weight_size, padding, dilation, stride))}
+                                            max={max_input_size.Y}
+                                            value={input_size.Y}
+                                            onChange={onChangeInner("input_size", "Y")}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Kernel size X:</legend>
+                                    <Slider min="1"
+                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, {X: x, Y: weight_size.Y}, padding, dilation, stride))}
+                                            value={weight_size.X}
+                                            onChange={onChangeInner("weight_size", "X")}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Kernel size Y:</legend>
+                                    <Slider min="1"
+                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, {X: weight_size.X, Y: x}, padding, dilation, stride))}
+                                            value={weight_size.Y}
+                                            onChange={onChangeInner("weight_size", "Y")}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Padding:</legend>
+                                    <Slider min={minWhile(dilation*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, x, dilation, stride))}
+                                            max={Math.max(dilation*(weight_size.X-1), dilation*(weight_size.Y-1))}
+                                            value={padding}
+                                            onChange={onChange("padding")}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Dilation:</legend>
+                                    <Slider min="1"
+                                            max={maxWhile(1, 100, (x) => paramsOK(input_size, weight_size, padding, x, stride))}
+                                            value={dilation}
+                                            onChange={onChange("dilation")}
+                                            disabled={weight_size.X === 1 && weight_size.Y === 1}
+                                            />
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Stride:</legend>
+                                    <Slider min="1"
+                                            max={Math.max(input_size.X-dilation*(weight_size.X-1), input_size.Y-dilation*(weight_size.Y-1), 1)}
+                                            value={stride}
+                                            onChange={onChange("stride")}
+                                            />
+                                </fieldset>
                             </form>
                             <Viewport {...params} />
                         </div>
@@ -351,7 +397,7 @@
                             } else {
                                 r = d3.color(r);
                             }
-                            if (i < padding || i >= input_size + padding || j < padding || j >= input_size + padding) {
+                            if (i < padding || i >= input_size.Y + padding || j < padding || j >= input_size.X + padding) {
                                 r = r.darker(2.5);
                             }
                             return r;
@@ -360,9 +406,9 @@
 
                     // Given the animation timestep, determine the output coordinates
                     // of our animated stencil.
-                    const flat_animated = this.state.counter % (output_size * output_size);
-                    const animatedH = Math.floor(flat_animated / output_size);
-                    const animatedW = flat_animated % output_size;
+                    const flat_animated = this.state.counter % (output_size.X * output_size.Y);
+                    const animatedH = Math.floor(flat_animated / output_size.X);
+                    const animatedW = flat_animated % output_size.X;
 
                     // If the user is not hovering over any matrix, render "as if"
                     // they were hovering over the animated output coordinate.
@@ -377,8 +423,8 @@
                     // top-left corner of the stencil is attached to the cursor.
                     if (hoverOver === "input") {
                         hoverOver = "output";
-                        hoverH = Math.min(Math.floor(hoverH / stride), output_size - 1);
-                        hoverW = Math.min(Math.floor(hoverW / stride), output_size - 1);
+                        hoverH = Math.min(Math.floor(hoverH / stride), output_size.Y - 1);
+                        hoverW = Math.min(Math.floor(hoverW / stride), output_size.X - 1);
                     }
 
                     // Generate the color interpolator for generating the kernels.
@@ -402,10 +448,10 @@
                     // interpolation scheme, please try swapping it in here and seeing
                     // how it goes.
                     const scale_size = weight_size;
-                    const xScale = d3.scaleSequential(d3.interpolateLab('#d7191c', '#2c7bb6')).domain([-1, scale_size])
-                    const yScale = d3.scaleSequential(d3.interpolateLab('#d7191c', d3.color('#1a9641').brighter(1))).domain([-1, scale_size])
+                    const xScale = d3.scaleSequential(d3.interpolateLab('#d7191c', '#2c7bb6')).domain([-1, scale_size.X])
+                    const yScale = d3.scaleSequential(d3.interpolateLab('#d7191c', d3.color('#1a9641').brighter(1))).domain([-1, scale_size.Y])
                     function xyScale(i, j) {
-                        return d3.color(d3.interpolateLab(xScale(i), yScale(j))((j-i) / (scale_size-1)));
+                        return d3.color(d3.interpolateLab(xScale(i), yScale(j))((j-i) / (Math.max(scale_size.X, scale_size.Y) - 1)));
                     }
 
                     // Given an output coordinate 'hoverH, hoverW', compute a mapping
@@ -415,9 +461,9 @@
                     // Result:
                     //    r[input_height][input_width] = [weight_height, weight_width]
                     function compute_input_multiplies_with_weight(hoverH, hoverW) {
-                        const input_multiplies_with_weight = array1d(padded_input_size * padded_input_size);
-                        for (let h_weight = 0; h_weight < weight_size; h_weight++) {
-                            for (let w_weight = 0; w_weight < weight_size; w_weight++) {
+                        const input_multiplies_with_weight = array1d(padded_input_size.X * padded_input_size.Y);
+                        for (let h_weight = 0; h_weight < weight_size.Y; h_weight++) {
+                            for (let w_weight = 0; w_weight < weight_size.X; w_weight++) {
                                 const flat_input = output[hoverH][hoverW][h_weight][w_weight];
                                 if (typeof flat_input === "undefined") 
                                     continue;
@@ -450,7 +496,7 @@
                             // If this input was used to compute the selected output, render
                             // it the same color as the corresponding entry in the weight
                             // matrix which it was multiplied against.
-                            const r = input_multiplies_with_weight[i * padded_input_size + j];
+                            const r = input_multiplies_with_weight[i * padded_input_size.X + j];
                             if (r) {
                                 return xyScale(r[0], r[1]);
                             }
@@ -458,7 +504,7 @@
                             // Otherwise, if the input was used to compute the animated
                             // output, render it as a lighter version of the weight color it was
                             // multiplied against.
-                            const s = animated_input_multiplies_with_weight[i * padded_input_size + j];
+                            const s = animated_input_multiplies_with_weight[i * padded_input_size.X + j];
                             if (s) {
                                 return whiten(xyScale(s[0], s[1]), 0.8);
                             }
@@ -481,9 +527,9 @@
 
                         // Compute a mapping from flat input index to output coordinates which
                         // this input multiplied with the selected weight to produce.
-                        const input_produces_output = array1d(padded_input_size * padded_input_size);
-                        for (let h_out = 0; h_out < output_size; h_out++) {
-                            for (let w_out = 0; w_out < output_size; w_out++) {
+                        const input_produces_output = array1d(padded_input_size.X * padded_input_size.Y);
+                        for (let h_out = 0; h_out < output_size.Y; h_out++) {
+                            for (let w_out = 0; w_out < output_size.X; w_out++) {
                                 const flat_input = output[h_out][w_out][hoverH][hoverW];
                                 if (typeof flat_input === "undefined") 
                                     continue;
@@ -503,7 +549,7 @@
                             // produce the animated output, darken it.  This shows the
                             // current animation step's "contribution" to the colored
                             // inputs.
-                            const s = animated_input_multiplies_with_weight[i * padded_input_size + j];
+                            const s = animated_input_multiplies_with_weight[i * padded_input_size.X + j];
                             if (s) {
                                 if (s[0] === hoverH && s[1] === hoverW) {
                                     return color.darker(1);
@@ -512,7 +558,7 @@
 
                             // If this input cell was multiplied by the selected weight to
                             // produce *some* output, render it as the weight's color.
-                            const r = input_produces_output[i * padded_input_size + j];
+                            const r = input_produces_output[i * padded_input_size.X + j];
                             if (r) {
                                 // BUT, if the input cell is part of the current animation
                                 // stencil, lighten it so that we can still see the stencil.
@@ -545,8 +591,8 @@
                     return (
                         <div className="viewport">
                             <div className="grid-container">
-                            Input ({input_size} × {input_size}):
-                            <Grid size={input_size + 2 * padding}
+                            Input ({input_size.X} × {input_size.Y}):
+                            <Grid size={{X: input_size.X + 2 * padding, Y: input_size.Y + 2 * padding}}
                                     colorizer={inputColorizer}
                                     onMouseEnter={(e, i, j) => {
                                         this.setState({hoverOver: "input", hoverH: i, hoverW: j});
@@ -557,7 +603,7 @@
                                     />
                             </div>
                             <div className="grid-container">
-                            Weight ({weight_size} × {weight_size}):
+                            Weight ({weight_size.X} × {weight_size.Y}):
                             <Grid size={weight_size}
                                     colorizer={weightColorizer}
                                     onMouseEnter={(e, i, j) => {
@@ -569,7 +615,7 @@
                                     />
                             </div>
                             <div className="grid-container">
-                            Output ({output_size} × {output_size}):
+                            Output ({output_size.X} × {output_size.Y}):
                             <Grid size={output_size}
                                     colorizer={outputColorizer}
                                     onMouseEnter={(e, i, j) => {
@@ -597,18 +643,21 @@
              *                    left by a mouse.
              */
             function Grid(props) {
-                const size = parseInt(props.size, 10);
-                const grid = array2d(size, size);
+                const size = {
+                    X: parseInt(props.size.X, 10),
+                    Y: parseInt(props.size.Y, 10)
+                };
+                const grid = array2d(size.Y, size.X);
                 const xgrid = grid.map((row, i) => {
                     const xrow = row.map((e, j) => {
-                    // Use of colorizer this way means we force recompute of all tiles
-                    const color = props.colorizer ? props.colorizer(i, j) : undefined;
-                    return <td key={j}
-                                style={{backgroundColor: color}}
-                                onMouseEnter={props.onMouseEnter ?
-                                            ((e) => props.onMouseEnter(e, i, j)) : undefined}
-                                onMouseLeave={props.onMouseLeave ?
-                                            ((e) => props.onMouseLeave(e, i, j)) : undefined} />
+                        // Use of colorizer this way means we force recompute of all tiles
+                        const color = props.colorizer ? props.colorizer(i, j) : undefined;
+                        return <td key={j}
+                                    style={{backgroundColor: color}}
+                                    onMouseEnter={props.onMouseEnter ?
+                                                ((e) => props.onMouseEnter(e, i, j)) : undefined}
+                                    onMouseLeave={props.onMouseLeave ?
+                                                ((e) => props.onMouseLeave(e, i, j)) : undefined} />
                     });
                     return <tr key={i}>{xrow}</tr>;
                 });
