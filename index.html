@@ -414,19 +414,19 @@
                                 <fieldset>
                                     <legend>Padding:</legend>
                                     <Sliders4 min1={minWhile(dilation.X*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: x, R: padding.R, U: padding.U, D: padding.D}, dilation, stride))}
-                                              max1={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.Y-1))}
+                                              max1={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.X-1))}
                                               value1={padding.L}
                                               onChange1={onChangeInner("padding", "L")}
                                               min2={minWhile(dilation.X*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: x, U: padding.U, D: padding.D}, dilation, stride))}
-                                              max2={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.Y-1))}
+                                              max2={Math.max(dilation.X*(weight_size.X-1), dilation.X*(weight_size.X-1))}
                                               value2={padding.R}
                                               onChange2={onChangeInner("padding", "R")}
-                                              min3={minWhile(dilation.Y*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: x, D: padding.D}, dilation, stride))}
-                                              max3={Math.max(dilation.Y*(weight_size.X-1), dilation.Y*(weight_size.Y-1))}
+                                              min3={minWhile(dilation.Y*(weight_size.Y-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: x, D: padding.D}, dilation, stride))}
+                                              max3={Math.max(dilation.Y*(weight_size.Y-1), dilation.Y*(weight_size.Y-1))}
                                               value3={padding.U}
                                               onChange3={onChangeInner("padding", "U")}
-                                              min4={minWhile(dilation.Y*(weight_size.X-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: padding.U, D: x}, dilation, stride))}
-                                              max4={Math.max(dilation.Y*(weight_size.X-1), dilation.Y*(weight_size.Y-1))}
+                                              min4={minWhile(dilation.Y*(weight_size.Y-1), 0, (x) => paramsOK(input_size, weight_size, {L: padding.L, R: padding.R, U: padding.U, D: x}, dilation, stride))}
+                                              max4={Math.max(dilation.Y*(weight_size.Y-1), dilation.Y*(weight_size.Y-1))}
                                               value4={padding.D}
                                               onChange4={onChangeInner("padding", "D")}
                                               />
